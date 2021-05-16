@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/page_login.css">
+    <style>
+        select {
+            box-sizing: border-box;
+            display: block;
+            width: 350px;
+            margin-left: 12px;
+            border-width: 1px;
+            border-style: solid;
+            padding: 16px;
+            outline: 0;
+            font-family: inherit;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+<div class="login">
+    <div class="login-triangle"></div>
+    <h2 class="login-header">Log in</h2>
+    <form class="login-container" action="{{ url_for('login') }}" method="post">
+        <select name="select_role" id="roles">
+            <option value="Öğretim Görevlisi">Lecturer</option>
+            <option value="Öğrenci">Student</option>
+            <option value="Memur">Officer</option>
+        </select>
+        <p><input name="barcode_no" type="text" placeholder="User ID"></p>
+        <p><input type="submit" value="Log in"></p>
+    </form>
+</div>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/page_main.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.3/css/select.dataTables.min.css">
+</head>
+<body>
+<nav>
+    <a href="{{ url_for('personal') }}" class="button">My Page</a>
+    <a href="{{ url_for('logout') }}" class="button">Log Out</a>
+</nav>
+<br/>
+<div class="container">
+    <h3 style="">
+        Aydinlik University Library Information System
+    </h3>
+    <title>Library System</title>
+    <p hidden id="message_id">{{ message }}</p>
+    {% if items %}
+        <table id='result' style="width:100%" class="display">
+            <thead>
+            <tr>
+                {% for header in headers %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in items %}
+                <tr>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.kind }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.creator }}</td>
+                    <td>{{ item.item_id }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.shelf }}</td>
+                    <td>{{ item.available }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <input id="select-item" type="button" value="Select">
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/js/bootstrap.min.js"></script>
+<script src="/static/js/fancyTable.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var data;
+        var table = $('#result').DataTable({
+            select: {
+                style: 'single'
+            }
+        });
+
+        $('#result tbody').on('click', 'tr', function () {
+            data = table.row(this).data();
+            $(this).toggleClass('selected');
+        });
+        $('#select-item').click(function () {
+            $.ajax({
+                type: "POST",
+                url: "{{ url_for("send_item") }}",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                dataType: "json",
+                success: function (response) {
+                    console.log(response);
+                    alert(response['message']);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
