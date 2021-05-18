@@ -6,6 +6,5 @@ class Card:
         self.balance = balance
 
     def display(self):
-        card_feature = {'Card ID': self.card_id, 'Owner ID': self.owner_id,
-                        'Balance': str(self.balance)}
+        card_feature = (self.card_id, str(self.balance))
         return card_feature

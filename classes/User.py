@@ -10,7 +10,5 @@ class User:
         self.email = email
 
     def display(self):
-        feature_list = {'Category': self.category, 'User ID': str(self.user_id), 'Name Surname': self.name_surname,
-                        'Number of Owned Items': str(self.owned_item), 'Number of Reserved Items': str(self.reserved_item),
-                        'Owned Items ID List': self.owned_id_list, 'Card ID': str(self.card_id), 'Email': self.email}
+        feature_list = (self.category, str(self.user_id), str(self.card_id), self.email)
         return feature_list

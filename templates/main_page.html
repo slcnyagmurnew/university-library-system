@@ -78,6 +78,7 @@
                 dataType: "json",
                 success: function (response) {
                     console.log(response);
+                    window.location.href = '/';
                     alert(response['message']);
                 },
                 error: function (err) {

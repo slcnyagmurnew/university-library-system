@@ -44,7 +44,7 @@ def get_user(user_id):
 
 
 def get_user_card(user_id):
-    query = "select * from kart where sahip_id::int={barcode_no}".format(barcode_no=user_id)
+    query = "select * from kart where sahip_id::int={barcode_no}".format(barcode_no=int(user_id))
     cursor.execute(query)
     card = cursor.fetchone()
     return Card(card[0], card[1], card[2], card[3])
@@ -55,9 +55,11 @@ def control_get_operation(user):
     query = "select tasima_hakki from sinirlar where kategori={user_role}".format(user_role=repr(role))
     cursor.execute(query)
     limit = cursor.fetchone()
-    if (role == 'Öğrenci' or role == 'Memur') and user.owned_item == limit:
+    if (role == 'Öğrenci') and user.owned_item == limit:
         return False
     elif (role == 'Öğretim Görevlisi') and user.owned_item == limit:
+        return False
+    elif (role == 'Memur') and user.owned_item == limit:
         return False
     else:
         return True
@@ -81,25 +83,34 @@ def can_borrow_item(item):
     cursor.execute(query)
     result = cursor.fetchone()
     if result is not None:
-        return True, "available"
+        return "available"
     else:
         query = "select * from odunc where reserve_mi=FALSE " \
                 "and obje_id::int={id}".format(id=item_id_)
         cursor.execute(query)
         result = cursor.fetchone()
         if result is not None:
-            return True, "reserve"
-    return False
+            return "reserve"
+    return "false"
 
 
-def borrow_item(user, item):
-    item_id_ = item.item_id + "  "
+def have_expired_item(user):
     user_id = user.user_id
     now = datetime.now()
     formatted_date = now.strftime('%Y-%m-%d')
-    print(type(formatted_date))
-    print(type(now))
-    print(formatted_date)
+    cursor.execute(sql.SQL("select * from {} where alan_id=%s and teslim_tarihi<%s;").format(sql.Identifier('odunc')), [
+        str(user_id),
+        formatted_date
+    ])
+    result = cursor.fetchone()
+    return result is not None
+
+
+def borrow_item(user, item_id):
+    item_id_ = item_id + "  "
+    user_id = user.user_id
+    now = datetime.now()
+    formatted_date = now.strftime('%Y-%m-%d')
     cursor.execute(sql.SQL("INSERT INTO {} VALUES (%s, %s, %s);").format(sql.Identifier('odunc')), [
         user_id,
         item_id_,
@@ -119,6 +130,19 @@ def reserve_item(user, item):
     connection.commit()
 
 
+def card_operation(amount, increase, card_id):
+    op = ''
+    if increase is True:
+        op = '+'
+    else:
+        op = '-'
+    query = "update kart set bakiye=bakiye{op}{amount} where id::int={id}".format(op=op,
+                                                                                  amount=amount,
+                                                                                  id=card_id)
+    cursor.execute(query)
+    connection.commit()
+
+
 def find_owner_reserve(item):
     item_id_ = item.item_id + "  "
     query = "select alan_id from odunc where obje_id::int={id}".format(id=item_id_)
@@ -128,9 +152,51 @@ def find_owner_reserve(item):
     return reserve_user
 
 
-# odunc tablosuna ekleme yap
-def set_item_to_user(user, item):
-    query = "update table envanter"
+def get_belonging_items(user):
+    user_id = user.user_id
+    query = "select e.id, e.isim, o.teslim_tarihi, o.reserve_mi from odunc o, envanter e where o.obje_id in " \
+            "(select obje_id from odunc where alan_id::int={id}) and e.id=o.obje_id".format(id=user_id)
+    cursor.execute(query)
+    result = cursor.fetchall()
+    item_list = []
+    for row in result:
+        item_list.append(row)
+    return item_list
+
+
+def get_reserved_items(user):
+    user_id = user.user_id
+    query = "select e.id, e.isim, r.kac_gun_kaldi, r.rezerve_bitecek_tarih from rezerve r, envanter e " \
+            "where r.kime_gidecek_id::int={id} and r.materyal_id=e.id".format(id=user_id)
+    cursor.execute(query)
+    result = cursor.fetchall()
+    item_list = []
+    for row in result:
+        item_list.append(row)
+    return item_list
+
+
+def remove_from_belonging(item_id):
+    item_id_ = item_id + "  "
+    query = "delete from odunc where obje_id::int={id}".format(id=item_id_)
+    cursor.execute(query)
+    connection.commit()
+
+
+def remove_from_reserve(item_id):
+    item_id_ = item_id + "  "
+    query = "delete from rezerve where materyal_id::int={id}".format(id=item_id_)
+    cursor.execute(query)
+    connection.commit()
+
+
+def is_still_borrowed(item_id):
+    item_id_ = item_id + "  "
+    query = "select * from rezerve where kac_gun_kaldi is not null and " \
+            "materyal_id::int={id}".format(id=int(item_id_))
+    cursor.execute(query)
+    result = cursor.fetchone()
+    return result is None
 
 
 """finally:

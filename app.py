@@ -64,27 +64,59 @@ def home():
 @app.route('/personal', methods=['POST', 'GET'])
 def personal():
     current_user = session.get('user')
+    message = ''
+    if request.method == "POST":
+        if request.form['submit_button'] == 'Leave the Item':
+            item_id = request.form['leftId']
+            remove_from_belonging(item_id)
+            message = 'Item has been successfully released!'
+            # reserve ise email
+        elif request.form['submit_button'] == 'Add Money':
+            amount = request.form['amount_money']
+            card_id = get_user_card(current_user.user_id).card_id
+            card_operation(amount, True, card_id)
+            message = 'Money successfully added!'
+        elif request.form['submit_button'] == 'Borrow the Item':
+            item_id = request.form['borrowedId']
+            if is_still_borrowed(item_id):
+                message = "The item is still in the user!"
+            else:
+                remove_from_reserve(item_id)
+                borrow_item(current_user, item_id)
+                message = 'You were successfully get item!'
+        else:
+            print("nothing to do")
     current_card = get_user_card(current_user.user_id)
-    return render_template("personal_page.html", user=current_user.display(), card=current_card.display())
+    belonging_list = get_belonging_items(current_user)
+    reserved_list = get_reserved_items(current_user)
+    return render_template("personal_page.html",
+                           user_information=current_user.display(),
+                           card_information=current_card.display(),
+                           belonging_items=belonging_list,
+                           reserved_items=reserved_list,
+                           message=message)
 
 
 @app.route('/send_item', methods=['POST'])
 def send_item():
     message = ''
-    if not control_get_operation(session.get('user', None)):
-        print("f")
-        # alert
+    current_user = session.get('user')
+    json_data = request.get_json()
+    selected_item = Stock(json_data[0], json_data[1], json_data[2],
+                          json_data[3], json_data[4], json_data[5],
+                          json_data[6], json_data[7])
+    if not control_get_operation(current_user):
+        message = 'You have reached the maximum number of items you can get!'
+    elif not control_get_book(current_user, selected_item):
+        message = 'You dont have the necessary role to take it!'
+    elif have_expired_item(current_user):
+        message = 'You have overdue items!'
     else:
-        current_user = session.get('user')
-        json_data = request.get_json()
-        selected_item = Stock(json_data[0], json_data[1], json_data[2],
-                              json_data[3], json_data[4], json_data[5],
-                              json_data[6], json_data[7])
         result = can_borrow_item(selected_item)
-        if result[0] is True and result[1] == "available":
-            borrow_item(current_user, selected_item)
+        if result == "available":
+            borrow_item(current_user, selected_item.item_id)
             message = 'You were successfully get item!'
-        elif result[0] is True and result[1] == "reserve":
+        elif result == "reserve":
             reserve_item(current_user, selected_item)
             message = 'You were successfully reserve item!'
         else:
