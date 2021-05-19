@@ -2,7 +2,6 @@ import json
 from flask import Flask, render_template, request, redirect, url_for, session, json, jsonify, flash
 from flask_session import Session
 import setup
-from classes.Card import Card
 from db import *
 
 app = Flask(__name__)
@@ -39,6 +38,8 @@ headers = ('Category', 'Type', 'Name', 'Creator', 'ID',
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    update_debts()
+    update_reserves()
     if request.method == "POST":
         barcode = request.form['barcode_no']
         user_role = request.form['select_role']
@@ -68,8 +69,11 @@ def personal():
     if request.method == "POST":
         if request.form['submit_button'] == 'Leave the Item':
             item_id = request.form['leftId']
-            remove_from_belonging(item_id)
-            message = 'Item has been successfully released!'
+            if have_debt(item_id):
+                message = 'You have debt for this item, please pay before leave it!'
+            else:
+                remove_from_belonging(item_id)
+                message = 'Item has been successfully released!'
             # reserve ise email
         elif request.form['submit_button'] == 'Add Money':
             amount = request.form['amount_money']
@@ -80,6 +84,10 @@ def personal():
             item_id = request.form['borrowedId']
             if is_still_borrowed(item_id):
                 message = "The item is still in the user!"
+            elif not control_get_operation(current_user):
+                message = 'You have reached the maximum number of items you can get!'
+            elif have_expired_item(current_user):
+                message = 'You have overdue items!'
             else:
                 remove_from_reserve(item_id)
                 borrow_item(current_user, item_id)

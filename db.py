@@ -102,8 +102,22 @@ def have_expired_item(user):
         str(user_id),
         formatted_date
     ])
-    result = cursor.fetchone()
+    result = cursor.fetchall()
     return result is not None
+
+
+def get_expired_items(user):
+    user_id = user.user_id
+    now = datetime.now()
+    formatted_date = now.strftime('%Y-%m-%d')
+    cursor.execute(
+        sql.SQL("select count(obje_id) from {} where alan_id=%s and teslim_tarihi<%s;").format(sql.Identifier('odunc')),
+        [
+            str(user_id),
+            formatted_date
+        ])
+    result = cursor.fetchone()
+    return result
 
 
 def borrow_item(user, item_id):
@@ -197,6 +211,54 @@ def is_still_borrowed(item_id):
     cursor.execute(query)
     result = cursor.fetchone()
     return result is None
+
+
+def have_debt(item_id):
+    item_id_ = item_id + "  "
+    query = "select * from borclar where materyal_id::int={id}".format(id=item_id_)
+    cursor.execute(query)
+    result = cursor.fetchone()
+    return result is not None
+
+
+def update_debts():
+    query = "select * from borclar"
+    cursor.execute(query)
+    result = cursor.fetchall()
+    debt_list = []
+    for row in result:
+        debt_list.append(row)
+    for item in debt_list:
+        item_id = item[1] + "  "  # materyal id
+        query = "select * from odunc where obje_id::int={item_id}".format(item_id=item_id)
+        cursor.execute(query)
+        result1 = cursor.fetchone()
+        if result1 is not None:  # odunc tablosunda yoksa atla
+            diff = 0 - int((result1[3] - datetime.date(datetime.now())).days)
+            query = "update borclar set tutar={diff} where materyal_id::int={id}".format(diff=diff, id=item_id)
+            cursor.execute(query)
+            connection.commit()
+
+
+def update_reserves():
+    query = "select teslim_edildi_tarih, materyal_id from rezerve where kac_gun_kaldi is not null"
+    cursor.execute(query)
+    result = cursor.fetchall()
+    reserve_list = []
+    for row in result:
+        reserve_list.append(row)
+    for item in reserve_list:
+        date = item[0]
+        item_id_ = item[1] + "  "
+        left_day = 5 - int((datetime.date(datetime.now()) - date).days)
+        if left_day <= 0:
+            query = "delete from rezerve where materyal_id::int={id}".format(id=item_id_)
+            cursor.execute(query)
+        else:
+            query = "update rezerve set kac_gun_kaldi={left_day} where materyal_id::int={id}" \
+                .format(left_day=left_day, id=item_id_)
+            cursor.execute(query)
+        connection.commit()
 
 
 """finally:
