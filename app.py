@@ -92,16 +92,28 @@ def personal():
                 remove_from_reserve(item_id)
                 borrow_item(current_user, item_id)
                 message = 'You were successfully get item!'
+        elif request.form['submit_button'] == 'Pay the Debt':
+            card_id = get_user_card(current_user.user_id).card_id
+            amount = int(request.form['paidAmount'])
+            item_id = request.form['paidId']
+            if is_balance_enough(card_id, amount):
+                card_operation(amount, False, card_id)
+                delete_from_debts(item_id)
+                message = 'You paid successfully for item!'
+            else:
+                message = 'Your balance is not enough!'
         else:
             print("nothing to do")
     current_card = get_user_card(current_user.user_id)
     belonging_list = get_belonging_items(current_user)
     reserved_list = get_reserved_items(current_user)
+    debt_items = get_debt_items(current_user)
     return render_template("personal_page.html",
                            user_information=current_user.display(),
                            card_information=current_card.display(),
                            belonging_items=belonging_list,
                            reserved_items=reserved_list,
+                           debt_items=debt_items,
                            message=message)
 
 

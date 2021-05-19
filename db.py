@@ -157,6 +157,14 @@ def card_operation(amount, increase, card_id):
     connection.commit()
 
 
+def is_balance_enough(card_id, amount):
+    query = "select bakiye from kart where id::int={card_id}".format(card_id=card_id)
+    cursor.execute(query)
+    result = cursor.fetchone()
+    balance = int(result[0])
+    return balance > amount
+
+
 def find_owner_reserve(item):
     item_id_ = item.item_id + "  "
     query = "select alan_id from odunc where obje_id::int={id}".format(id=item_id_)
@@ -219,6 +227,26 @@ def have_debt(item_id):
     cursor.execute(query)
     result = cursor.fetchone()
     return result is not None
+
+
+def delete_from_debts(item_id):
+    item_id_ = item_id + "  "
+    query = "delete from borclar where materyal_id::int={id}".format(id=item_id_)
+    cursor.execute(query)
+    connection.commit()
+
+
+def get_debt_items(user):
+    user_id = user.user_id
+    query = "select distinct b.materyal_id, e.isim, b.tutar from borclar b, " \
+            "envanter e, odunc o where b.borclu_id::int={id} and b.materyal_id=e.id " \
+            "and o.alan_id=b.borclu_id".format(id=user_id)
+    cursor.execute(query)
+    result = cursor.fetchall()
+    item_list = []
+    for row in result:
+        item_list.append(row)
+    return item_list
 
 
 def update_debts():
