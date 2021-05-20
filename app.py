@@ -91,8 +91,6 @@ def personal():
             else:
                 if is_item_reserved(item_id) is True:
                     email = find_email_reserve(item_id)
-                    # msg = Message('About Your Item Reservation', sender='aydinlikedulib@outlook.com',
-                    #               recipients=[email])
                     server = smtplib.SMTP('smtp-mail.outlook.com', 587)
                     server.connect('smtp-mail.outlook.com', 587)
                     server.ehlo()
@@ -100,7 +98,7 @@ def personal():
                     server.ehlo()
                     server.login('aydinlikedulib@outlook.com', 'Oguzkutman09.')
                     recipients = [email]
-                    body = "Hi,\nYou can receive the item you reserved!\n\nBest regards!"
+                    body = "\nHi,\nYou can receive the item you reserved!\n\nBest regards!"
                     message = """From: %s\r\nTo: %s\r\nSubject: %s\r\n\
 
                     %s
@@ -175,7 +173,7 @@ def send_item():
             reserve_item(current_user, selected_item)
             message = 'You were successfully reserve item!'
         else:
-            message = 'Sorry, this item not available'
+            message = 'Sorry, this item not available or already reserved!'
     duple = {'status': 'success', 'message': message}
     return json.dumps(duple)
 

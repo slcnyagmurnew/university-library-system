@@ -82,7 +82,10 @@ def can_borrow_item(item):
             "and id::int={id}".format(id=item_id_)
     cursor.execute(query)
     result = cursor.fetchone()
-    if result is not None:
+    query = "select * from rezerve where materyal_id::int={id}".format(id=item_id_)
+    cursor.execute(query)
+    result1 = cursor.fetchone()
+    if result is not None and result1 is None:
         return "available"
     else:
         query = "select * from odunc where reserve_mi=FALSE " \
