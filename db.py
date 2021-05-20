@@ -103,7 +103,10 @@ def have_expired_item(user):
         formatted_date
     ])
     result = cursor.fetchall()
-    return result is not None
+    item_list = []
+    for row in result:
+        item_list.append(row)
+    return len(item_list) != 0
 
 
 def get_expired_items(user):
@@ -163,6 +166,28 @@ def is_balance_enough(card_id, amount):
     result = cursor.fetchone()
     balance = int(result[0])
     return balance > amount
+
+
+def is_item_reserved(item_id):
+    item_id_ = item_id + "  "
+    query = "select reserve_mi from odunc where obje_id::int={id}".format(id=item_id_)
+    cursor.execute(query)
+    result = cursor.fetchone()
+    print(type(result[0]))
+    return result[0]
+
+
+# itemi rezerve eden kullanıcıyı bulmak için
+def find_email_reserve(item_id):
+    item_id_ = item_id + "  "
+    query = "select kime_gidecek_id from rezerve where materyal_id::int={id}".format(id=item_id_)
+    cursor.execute(query)
+    result = cursor.fetchone()
+    receiver_id = str(result[0])
+    query = "select email from kullanicilar where id::int={id}".format(id=receiver_id)
+    cursor.execute(query)
+    result1 = cursor.fetchone()
+    return str(result1[0])
 
 
 def find_owner_reserve(item):

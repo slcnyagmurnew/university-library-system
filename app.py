@@ -1,10 +1,15 @@
 import json
-from flask import Flask, render_template, request, redirect, url_for, session, json, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, session, json
 from flask_session import Session
+from flask_mail import Mail, Message
 import setup
+import smtplib
 from db import *
+import socket
+socket.getaddrinfo('localhost', 5000)
 
 app = Flask(__name__)
+
 app.secret_key = b'_523#y2L"F4Q8z\n\xec]/'
 SESSION_TYPE = 'filesystem'
 app.config['SESSION_TYPE'] = SESSION_TYPE
@@ -20,6 +25,12 @@ def configure_app(flask_app):
     flask_app.config['RESTPLUS_VALIDATE'] = setup.RESTPLUS_VALIDATE
     flask_app.config['RESTPLUS_MASK_SWAGGER'] = setup.RESTPLUS_MASK_SWAGGER
     flask_app.config['ERROR_404_HELP'] = setup.RESTPLUS_ERROR_404_HELP
+    """flask_app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
+    flask_app.config['MAIL_PORT'] = 587
+    flask_app.config['MAIL_USERNAME'] = 'aydinlikedulib@outlook.com'
+    flask_app.config['MAIL_PASSWORD'] = 'Oguzkutman09.'
+    flask_app.config['MAIL_USE_TLS'] = False
+    flask_app.config['MAIL_USE_SSL'] = True"""
 
 
 def initialize_app(a):
@@ -34,20 +45,26 @@ def main():
 
 headers = ('Category', 'Type', 'Name', 'Creator', 'ID',
            'Incoming Date', 'Shelf', 'Is Available?')
+mail = Mail(app)
 
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     update_debts()
     update_reserves()
+    message = ''
     if request.method == "POST":
         barcode = request.form['barcode_no']
         user_role = request.form['select_role']
         user = get_user(barcode)
-        session['user'] = user
-        session['role'] = user_role
-        return redirect('/')
-    return render_template("login_page.html")
+        if user.category != user_role:
+            message = 'User not found, please check your entries!'
+        else:
+            session['user'] = user
+            session['role'] = user_role
+            return redirect('/')
+    return render_template("login_page.html",
+                           message=message)
 
 
 @app.route('/', methods=['POST', 'GET'])
@@ -72,6 +89,24 @@ def personal():
             if have_debt(item_id):
                 message = 'You have debt for this item, please pay before leave it!'
             else:
+                if is_item_reserved(item_id) is True:
+                    email = find_email_reserve(item_id)
+                    # msg = Message('About Your Item Reservation', sender='aydinlikedulib@outlook.com',
+                    #               recipients=[email])
+                    server = smtplib.SMTP('smtp-mail.outlook.com', 587)
+                    server.connect('smtp-mail.outlook.com', 587)
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login('aydinlikedulib@outlook.com', 'Oguzkutman09.')
+                    recipients = [email]
+                    body = "Hi,\nYou can receive the item you reserved!\n\nBest regards!"
+                    message = """From: %s\r\nTo: %s\r\nSubject: %s\r\n\
+
+                    %s
+                    """ % ("aydinlikedulib@outlook.com", ", ".join(recipients), "About Your Item Reservation", body)
+                    server.sendmail("aydinlikedulib@outlook.com", recipients, message)
+                    server.quit()
                 remove_from_belonging(item_id)
                 message = 'Item has been successfully released!'
             # reserve ise email
