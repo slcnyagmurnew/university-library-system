@@ -28,7 +28,7 @@ def configure_app(flask_app):
     """flask_app.config['MAIL_SERVER'] = 'smtp-mail.outlook.com'
     flask_app.config['MAIL_PORT'] = 587
     flask_app.config['MAIL_USERNAME'] = 'aydinlikedulib@outlook.com'
-    flask_app.config['MAIL_PASSWORD'] = 'Oguzkutman09.'
+    flask_app.config['MAIL_PASSWORD'] = '****'
     flask_app.config['MAIL_USE_TLS'] = False
     flask_app.config['MAIL_USE_SSL'] = True"""
 
