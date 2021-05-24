@@ -317,6 +317,45 @@ def update_reserves():
         connection.commit()
 
 
+def update_parameter(option, role, new_value):
+    if option == "num_of_items":
+        cursor.execute(
+            sql.SQL("UPDATE {} SET tasima_hakki=%s WHERE kategori=%s;").format(sql.Identifier('sinirlar')), [
+                new_value,
+                role,
+            ])
+    elif option == "time_refund":
+        cursor.execute(
+            sql.SQL("UPDATE {} SET gun_hakki=%s WHERE kategori=%s;").format(sql.Identifier('sinirlar')), [
+                new_value,
+                role,
+            ])
+    else:
+        print("option not true")
+    connection.commit()
+
+
+def get_last_item():
+    query = "select nextval('envanter_id_seq')"
+    cursor.execute(query)
+    return cursor.fetchone()
+
+
+def insert_new_item(category, kind, name, creator, formatted_date, shelf):
+    result = get_last_item()
+    item_id = str(result[0]) + "  "
+    cursor.execute(sql.SQL("INSERT INTO {} VALUES (%s, %s, %s, %s, %s, %s, %s);").format(sql.Identifier('envanter')), [
+        category,
+        kind,
+        name,
+        creator,
+        item_id,
+        formatted_date,
+        shelf,
+    ])
+    connection.commit()
+
+
 """finally:
     # closing database connection.
     if connection:

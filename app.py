@@ -56,6 +56,11 @@ def login():
     if request.method == "POST":
         barcode = request.form['barcode_no']
         user_role = request.form['select_role']
+        if user_role == 'Admin':
+            if barcode == '999999':
+                return redirect('/admin')
+            else:
+                return render_template("login_page.html", message=message)
         user = get_user(barcode)
         if user.category != user_role:
             message = 'User not found, please check your entries!'
@@ -77,6 +82,26 @@ def home():
         items = get_all_stock()
         if current_user.category == role:
             return render_template("main_page.html", headers=headers, items=items)
+
+
+@app.route('/admin', methods=['POST', 'GET'])
+def admin():
+    if request.method == "POST":
+        if request.form['submit_button'] == 'Update':
+            action_type = request.form['select_action_type']
+            action_role = request.form['select_action_roles']
+            new_value = request.form['new_value']
+            update_parameter(action_type, action_role, new_value)
+        else:
+            category = request.form['category']
+            kind = request.form['kind']
+            name = request.form['name']
+            creator = request.form['creator']
+            shelf = request.form['shelf']
+            now = datetime.now()
+            formatted_date = now.strftime('%Y-%m-%d')
+            insert_new_item(category, kind, name, creator, formatted_date, shelf)
+    return render_template("admin_page.html")
 
 
 @app.route('/personal', methods=['POST', 'GET'])
