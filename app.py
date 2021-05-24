@@ -60,6 +60,7 @@ def login():
             if barcode == '999999':
                 return redirect('/admin')
             else:
+                message = 'Admin not found!'
                 return render_template("login_page.html", message=message)
         user = get_user(barcode)
         if user.category != user_role:
@@ -92,18 +93,32 @@ def admin():
             action_type = request.form['select_action_type']
             action_role = request.form['select_action_roles']
             new_value = request.form['new_value']
-            update_parameter(action_type, action_role, new_value)
-            message = 'Parameter changed successfully'
+            try:
+                val = int(new_value)
+                if val <= 0:
+                    message = 'Please enter a valid number!'
+                else:
+                    update_parameter(action_type, action_role, val)
+                    message = 'Parameter changed successfully'
+            except ValueError:
+                message = 'Please enter a number instead of text!'
         else:
             category = request.form['category']
             kind = request.form['kind']
             name = request.form['name']
             creator = request.form['creator']
             shelf = request.form['shelf']
-            now = datetime.now()
-            formatted_date = now.strftime('%Y-%m-%d')
-            insert_new_item(category, kind, name, creator, formatted_date, shelf)
-            message = 'Item added successfully'
+            if len(shelf) != 4:
+                message = 'Please enter a valid 4 character for shelf!'
+            elif not shelf.isalnum():
+                message = 'Shelf can not contains non-alphanumeric value!'
+            elif len(kind) > 20 or len(name) > 40 or len(creator) > 40:
+                message = 'Character length was too long!'
+            else:
+                now = datetime.now()
+                formatted_date = now.strftime('%Y-%m-%d')
+                insert_new_item(category, kind, name, creator, formatted_date, shelf)
+                message = 'Item added successfully'
     return render_template("admin_page.html",
                            message=message)
 
@@ -139,9 +154,12 @@ def personal():
             # reserve ise email
         elif request.form['submit_button'] == 'Add Money':
             amount = request.form['amount_money']
-            card_id = get_user_card(current_user.user_id).card_id
-            card_operation(amount, True, card_id)
-            message = 'Money successfully added!'
+            if int(amount) <= 0:
+                message = 'Please enter a valid money amount!'
+            else:
+                card_id = get_user_card(current_user.user_id).card_id
+                card_operation(amount, True, card_id)
+                message = 'Money successfully added!'
         elif request.form['submit_button'] == 'Borrow the Item':
             item_id = request.form['borrowedId']
             if is_still_borrowed(item_id):

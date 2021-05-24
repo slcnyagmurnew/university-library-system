@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <title>Administration</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
@@ -15,55 +16,53 @@
     <a href="{{ url_for('logout') }}" class="button">Log Out</a>
 </nav>
 <br/>
-<div class="login">
-    <p hidden id="message_id">{{ message }}</p>
-    <div class="container">
-        <h3 style="text-align: center">
-            CHANGE PARAMETERS
-        </h3>
-        <form class="form-add-item" action="{{ url_for('admin') }}" method="post">
-            <label>Select Action Type:</label>
-            <select name="select_action_type" id="action_types">
-                <option value="num_of_items">Number of Items</option>
-                <option value="time_refund">Refund Time</option>
-            </select>
-            <label>Select Role Type:</label>
-            <select name="select_action_roles" id="action_roles">
-                <option value="Öğrenci">Student</option>
-                <option value="Öğretim Görevlisi">Lecturer</option>
-                <option value="Memur">Officer</option>
-            </select>
-            <label>Enter the New Value:</label>
-            <p><input name="new_value" type="number" placeholder="New Value"></p>
-            <p><input name="submit_button" type="submit" value="Update" class="btn btn-info"></p>
-        </form>
-    </div>
-    <div class="container" style="padding-bottom: 50px">
-        <h3 style="text-align: center">
-            NEW ITEM
-        </h3>
-        <form class="form-add-item" method="post" action="{{ url_for('admin') }}">
-            <label for="category">Category</label>
-            <select id="category" name="category">
-                <option value="Kitap">Kitap</option>
-                <option value="Dergi">Dergi</option>
-                <option value="DVD">DVD</option>
-            </select>
-            <label for="kind">Kind of Item</label>
-            <input type="text" id="kind" name="kind" placeholder="Item type..">
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" placeholder="Item name..">
-            <label for="creator">Creator</label>
-            <input type="text" id="creator" name="creator" placeholder="Item creator..">
-            <label for="shelf">Shelf</label>
-            <input type="text" id="shelf" name="shelf" placeholder="Item shelf..">
-            <input name="submit_button" type="submit" value="Add Item" class="btn btn-info">
-        </form>
-    </div>
+<p hidden id="message_id">{{ message }}</p>
+<div class="container">
+    <h3 style="text-align: center">
+        CHANGE PARAMETERS
+    </h3>
+    <form class="form-add-item" action="{{ url_for('admin') }}" method="post">
+        <label>Select Action Type:</label>
+        <select name="select_action_type" id="action_types">
+            <option value="num_of_items">Number of Items</option>
+            <option value="time_refund">Refund Time</option>
+        </select>
+        <label>Select Role Type:</label>
+        <select name="select_action_roles" id="action_roles">
+            <option value="Öğrenci">Student</option>
+            <option value="Öğretim Görevlisi">Lecturer</option>
+            <option value="Memur">Officer</option>
+        </select>
+        <label>Enter the New Value:</label>
+        <p><input name="new_value" type="number" placeholder="New Value"></p>
+        <p><input name="submit_button" type="submit" value="Update" class="btn btn-info"></p>
+    </form>
+</div>
+<div class="container" style="padding-bottom: 50px">
+    <h3 style="text-align: center">
+        NEW ITEM
+    </h3>
+    <form class="form-add-item" method="post" action="{{ url_for('admin') }}">
+        <label for="category">Category</label>
+        <select id="category" name="category">
+            <option value="Kitap">Kitap</option>
+            <option value="Dergi">Dergi</option>
+            <option value="DVD">DVD</option>
+        </select>
+        <label for="kind">Kind of Item</label>
+        <input type="text" id="kind" name="kind" placeholder="Item type..">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" placeholder="Item name..">
+        <label for="creator">Creator</label>
+        <input type="text" id="creator" name="creator" placeholder="Item creator..">
+        <label for="shelf">Shelf</label>
+        <input type="text" id="shelf" name="shelf" placeholder="Item shelf..">
+        <input name="submit_button" type="submit" value="Add Item" class="btn btn-info">
+    </form>
 </div>
 <script>
     const message_text = document.getElementById("message_id").innerHTML;
-    if (message_text != null && message_text !== '' && message_text !== 'None'){
+    if (message_text != null && message_text !== '' && message_text !== 'None') {
         alert(message_text);
     }
 </script>
