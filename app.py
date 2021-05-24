@@ -86,12 +86,14 @@ def home():
 
 @app.route('/admin', methods=['POST', 'GET'])
 def admin():
+    message = ''
     if request.method == "POST":
         if request.form['submit_button'] == 'Update':
             action_type = request.form['select_action_type']
             action_role = request.form['select_action_roles']
             new_value = request.form['new_value']
             update_parameter(action_type, action_role, new_value)
+            message = 'Parameter changed successfully'
         else:
             category = request.form['category']
             kind = request.form['kind']
@@ -101,7 +103,9 @@ def admin():
             now = datetime.now()
             formatted_date = now.strftime('%Y-%m-%d')
             insert_new_item(category, kind, name, creator, formatted_date, shelf)
-    return render_template("admin_page.html")
+            message = 'Item added successfully'
+    return render_template("admin_page.html",
+                           message=message)
 
 
 @app.route('/personal', methods=['POST', 'GET'])

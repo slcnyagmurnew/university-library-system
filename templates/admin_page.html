@@ -16,7 +16,7 @@
 </nav>
 <br/>
 <div class="login">
-    <div class="login-triangle"></div>
+    <p hidden id="message_id">{{ message }}</p>
     <div class="container">
         <h3 style="text-align: center">
             CHANGE PARAMETERS
@@ -61,5 +61,11 @@
         </form>
     </div>
 </div>
+<script>
+    const message_text = document.getElementById("message_id").innerHTML;
+    if (message_text != null && message_text !== '' && message_text !== 'None'){
+        alert(message_text);
+    }
+</script>
 </body>
 </html>
