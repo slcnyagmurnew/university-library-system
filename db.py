@@ -40,7 +40,7 @@ def get_user(user_id):
     query = "select * from kullanicilar where id::int={barcode_no}".format(barcode_no=user_id)
     cursor.execute(query)
     user = cursor.fetchone()
-    return User(user[0], user[1], user[2], user[3], user[4], user[5], user[6], user[7])
+    return User(user[0], user[1], user[2], user[3], user[4], user[5], user[6])
 
 
 def get_user_card(user_id):
@@ -222,39 +222,34 @@ def get_reserved_items(user):
 
 
 def remove_from_belonging(item_id):
-    item_id_ = item_id
-    query = "delete from odunc where obje_id::int={id}".format(id=item_id_)
+    query = "delete from odunc where obje_id::int={id}".format(id=item_id)
     cursor.execute(query)
     connection.commit()
 
 
 def remove_from_reserve(item_id):
-    item_id_ = item_id
-    query = "delete from rezerve where materyal_id::int={id}".format(id=item_id_)
+    query = "delete from rezerve where materyal_id::int={id}".format(id=item_id)
     cursor.execute(query)
     connection.commit()
 
 
 def is_still_borrowed(item_id):
-    item_id_ = item_id
     query = "select * from rezerve where kac_gun_kaldi is not null and " \
-            "materyal_id::int={id}".format(id=int(item_id_))
+            "materyal_id::int={id}".format(id=int(item_id))
     cursor.execute(query)
     result = cursor.fetchone()
     return result is None
 
 
 def have_debt(item_id):
-    item_id_ = item_id
-    query = "select * from borclar where materyal_id::int={id}".format(id=item_id_)
+    query = "select * from borclar where materyal_id::int={id}".format(id=item_id)
     cursor.execute(query)
     result = cursor.fetchone()
     return result is not None
 
 
 def delete_from_debts(item_id):
-    item_id_ = item_id
-    query = "delete from borclar where materyal_id::int={id}".format(id=item_id_)
+    query = "delete from borclar where materyal_id::int={id}".format(id=item_id)
     cursor.execute(query)
     connection.commit()
 
@@ -349,6 +344,20 @@ def insert_new_item(category, kind, name, creator, formatted_date, shelf):
         shelf,
     ])
     connection.commit()
+
+
+def already_have(item, user):
+    item_id = item.item_id
+    user_id = user.user_id
+    cursor.execute(sql.SQL("select * from {} where obje_id=%s and alan_id=%s;").format(sql.Identifier('odunc')), [
+        item_id,
+        user_id
+    ])
+    result = cursor.fetchone()
+    cursor.execute(sql.SQL("select * from {} where materyal_id=%s and kimde_id=%s;").
+                   format(sql.Identifier('rezerve')), [item_id, user_id])
+    result1 = cursor.fetchone()
+    return result is not None or result1 is not None
 
 
 """finally:

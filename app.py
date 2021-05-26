@@ -55,20 +55,23 @@ def login():
     message = ''
     if request.method == "POST":
         barcode = request.form['barcode_no']
-        user_role = request.form['select_role']
-        if user_role == 'Admin':
-            if barcode == '999999':
-                return redirect('/admin')
-            else:
-                message = 'Admin not found!'
-                return render_template("login_page.html", message=message)
-        user = get_user(barcode)
-        if user.category != user_role:
-            message = 'User not found, please check your entries!'
+        if len(barcode) != 5:
+            message = 'Unknown person (Id Violation)!'
         else:
-            session['user'] = user
-            session['role'] = user_role
-            return redirect('/')
+            user_role = request.form['select_role']
+            if user_role == 'Admin':
+                if barcode == '99999':
+                    return redirect('/admin')
+                else:
+                    message = 'Admin not found!'
+                    return render_template("login_page.html", message=message)
+            user = get_user(barcode)
+            if user.category != user_role:
+                message = 'User not found, please check your entries!'
+            else:
+                session['user'] = user
+                session['role'] = user_role
+                return redirect('/')
     return render_template("login_page.html",
                            message=message)
 
@@ -154,7 +157,7 @@ def personal():
             # reserve ise email
         elif request.form['submit_button'] == 'Add Money':
             amount = request.form['amount_money']
-            if int(amount) <= 0:
+            if amount == '' or int(amount) <= 0:
                 message = 'Please enter a valid money amount!'
             else:
                 card_id = get_user_card(current_user.user_id).card_id
@@ -211,6 +214,8 @@ def send_item():
         message = 'You dont have the necessary role to take it!'
     elif have_expired_item(current_user):
         message = 'You have overdue items!'
+    elif already_have(selected_item, current_user):
+        message = 'You already have this item!'
     else:
         result = can_borrow_item(selected_item)
         if result == "available":
