@@ -143,7 +143,7 @@ def personal():
                     server.ehlo()
                     server.starttls()
                     server.ehlo()
-                    server.login('aydinlikedulib@outlook.com', 'Oguzkutman09.')
+                    server.login('aydinlikedulib@outlook.com', '*****')
                     recipients = [email]
                     item_name = get_item_name(item_id)
                     body = "\nHi,\nYou can receive {name} now! This is item you reserved.\n\nBest regards!".\
