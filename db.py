@@ -6,11 +6,6 @@ from datetime import datetime
 from classes.Stock import Stock
 from classes.User import User
 
-""""select distinct e.kategori, e.tur, e.isim, e.olusturucu, e.id, " \
-            "e.geldigi_tarih, e.hangi_raf, e.kutuphanede_mi, o.reserve_mi from " \
-            "envanter e, odunc o where o.reserve_mi=false and e.kutuphanede_mi=true" \
-            "and e.id={id}".format(id=item_id_)"""
-
 try:
     connection = psycopg2.connect(user="postgres",
                                   password="dbyagmur99",
@@ -24,6 +19,7 @@ except (Exception, psycopg2.Error) as error:
     print("Error while fetching data from PostgreSQL", error)
 
 
+# tum envanteri dondurur, tabloya
 def get_all_stock():
     query = "select * from envanter"
     cursor.execute(query)
@@ -36,6 +32,7 @@ def get_all_stock():
     return stock_list
 
 
+# kullanici idsinden kullaniciyi bulur
 def get_user(user_id):
     query = "select * from kullanicilar where id::int={barcode_no}".format(barcode_no=user_id)
     cursor.execute(query)
@@ -43,6 +40,7 @@ def get_user(user_id):
     return User(user[0], user[1], user[2], user[3], user[4], user[5], user[6])
 
 
+# kullanici idsinden kullaniciya ait karti bulur
 def get_user_card(user_id):
     query = "select * from kart where sahip_id::int={barcode_no}".format(barcode_no=int(user_id))
     cursor.execute(query)
@@ -50,6 +48,7 @@ def get_user_card(user_id):
     return Card(card[0], card[1], card[2], card[3])
 
 
+# kullanicinin itemi alabilecegini kontrol eder
 def control_get_operation(user):
     role = user.category
     query = "select tasima_hakki from sinirlar where kategori={user_role}".format(user_role=repr(role))
@@ -65,6 +64,7 @@ def control_get_operation(user):
         return True
 
 
+# ogretim gorevlisi disinda bir kullanicinin ders kitabi almamasini kontrol eder
 def control_get_book(user, item):
     role = user.category
     book_cat = item.category
@@ -75,6 +75,15 @@ def control_get_book(user, item):
         return True
 
 
+# item idsinden ismini dondurur
+def get_item_name(item_id):
+    query = "select isim from envanter where id::int={id}".format(id=item_id)
+    cursor.execute(query)
+    result = cursor.fetchone()
+    return result[0]
+
+
+# alinacak item kutuphanede mi, rezerve mi
 def can_borrow_item(item):
     item_id_ = item.item_id
     query = "select * from " \
@@ -97,6 +106,7 @@ def can_borrow_item(item):
     return "false"
 
 
+# odunc alinmis ve iadesi gecikmis itemi, borclu durumunu kontrol eder
 def have_expired_item(user):
     user_id = user.user_id
     now = datetime.now()
@@ -112,6 +122,7 @@ def have_expired_item(user):
     return len(item_list) != 0
 
 
+# kullaniciya ait gunu gecmis itemleri dondurur.
 def get_expired_items(user):
     user_id = user.user_id
     now = datetime.now()
@@ -126,6 +137,7 @@ def get_expired_items(user):
     return result
 
 
+# tum kosullar saglandiginda odunc aldirir
 def borrow_item(user, item_id):
     user_id = user.user_id
     now = datetime.now()
@@ -138,6 +150,7 @@ def borrow_item(user, item_id):
     connection.commit()
 
 
+# tum kosullar saglandiginda itemi rezerve eder
 def reserve_item(user, item):
     user_id = user.user_id
     reserve_user = find_owner_reserve(item)
@@ -148,6 +161,7 @@ def reserve_item(user, item):
     connection.commit()
 
 
+# karta para yukleme, karttan para dusme islemlerini yapar
 def card_operation(amount, increase, card_id):
     op = ''
     if increase is True:
@@ -161,6 +175,7 @@ def card_operation(amount, increase, card_id):
     connection.commit()
 
 
+# odeme islemi icin kart bakiyesini kontrol eder
 def is_balance_enough(card_id, amount):
     query = "select bakiye from kart where id::int={card_id}".format(card_id=card_id)
     cursor.execute(query)
@@ -169,6 +184,7 @@ def is_balance_enough(card_id, amount):
     return balance > amount
 
 
+# item rezerve ise true, degilse false dondurur
 def is_item_reserved(item_id):
     query = "select reserve_mi from odunc where obje_id::int={id}".format(id=item_id)
     cursor.execute(query)
@@ -177,7 +193,7 @@ def is_item_reserved(item_id):
     return result[0]
 
 
-# itemi rezerve eden kullanıcıyı bulmak için
+# itemi rezerve eden kullanıcıyı bulmak icin
 def find_email_reserve(item_id):
     query = "select kime_gidecek_id from rezerve where materyal_id::int={id}".format(id=item_id)
     cursor.execute(query)
@@ -189,6 +205,7 @@ def find_email_reserve(item_id):
     return str(result1[0])
 
 
+# itemi odunc alan kullaniciyi bulmak icin
 def find_owner_reserve(item):
     query = "select alan_id from odunc where obje_id::int={id}".format(id=item.item_id)
     cursor.execute(query)
@@ -197,6 +214,7 @@ def find_owner_reserve(item):
     return reserve_user
 
 
+# kullaniciya ait odunc alinmis tum itemleri dondurur
 def get_belonging_items(user):
     user_id = user.user_id
     query = "select e.id, e.isim, o.teslim_tarihi, o.reserve_mi from odunc o, envanter e where o.obje_id in " \
@@ -209,6 +227,7 @@ def get_belonging_items(user):
     return item_list
 
 
+# kullaniciya ait rezerve edilmis tum itemleri dondurur
 def get_reserved_items(user):
     user_id = user.user_id
     query = "select e.id, e.isim, r.kac_gun_kaldi, r.rezerve_bitecek_tarih from rezerve r, envanter e " \
@@ -221,18 +240,21 @@ def get_reserved_items(user):
     return item_list
 
 
+# kullanici odunc aldigini iade eder
 def remove_from_belonging(item_id):
     query = "delete from odunc where obje_id::int={id}".format(id=item_id)
     cursor.execute(query)
     connection.commit()
 
 
+# rezerve edilmis urunu gunu gectiginde otomatik cikarir
 def remove_from_reserve(item_id):
     query = "delete from rezerve where materyal_id::int={id}".format(id=item_id)
     cursor.execute(query)
     connection.commit()
 
 
+# bir item hala odunc durumunda ise true, degilse false dondurur
 def is_still_borrowed(item_id):
     query = "select * from rezerve where kac_gun_kaldi is not null and " \
             "materyal_id::int={id}".format(id=int(item_id))
@@ -241,6 +263,7 @@ def is_still_borrowed(item_id):
     return result is None
 
 
+# item idsine gore ilgili borc ozelliklerini dondurur
 def have_debt(item_id):
     query = "select * from borclar where materyal_id::int={id}".format(id=item_id)
     cursor.execute(query)
@@ -248,12 +271,14 @@ def have_debt(item_id):
     return result is not None
 
 
+# borc odeme durumunda borcu siler
 def delete_from_debts(item_id):
     query = "delete from borclar where materyal_id::int={id}".format(id=item_id)
     cursor.execute(query)
     connection.commit()
 
 
+# kullaniciya ait borclu itemleri dondurur
 def get_debt_items(user):
     user_id = user.user_id
     query = "select distinct b.materyal_id, e.isim, b.tutar from borclar b, " \
@@ -267,6 +292,7 @@ def get_debt_items(user):
     return item_list
 
 
+# sistem calistiginda borclar tablosunda guncellemeleri yapar
 def update_debts():
     query = "select * from borclar"
     cursor.execute(query)
@@ -286,6 +312,7 @@ def update_debts():
             connection.commit()
 
 
+# sistem calistiginda rezerve tablosunda guncellemeleri yapar
 def update_reserves():
     query = "select teslim_edildi_tarih, materyal_id from rezerve where kac_gun_kaldi is not null"
     cursor.execute(query)
@@ -307,6 +334,7 @@ def update_reserves():
         connection.commit()
 
 
+# admin kullanicilarin ozelliklerini degistirmek istediginde kullanilir
 def update_parameter(option, role, new_value):
     if option == "num_of_items":
         cursor.execute(
@@ -325,12 +353,14 @@ def update_parameter(option, role, new_value):
     connection.commit()
 
 
+# yeni eklenecek itemin idsini belirlemek icin kullanilir
 def get_last_item():
     query = "select nextval('envanter_id_seq')"
     cursor.execute(query)
     return cursor.fetchone()
 
 
+# admin envantere yeni item ekler
 def insert_new_item(category, kind, name, creator, formatted_date, shelf):
     result = get_last_item()
     item_id = str(result[0])
@@ -346,6 +376,8 @@ def insert_new_item(category, kind, name, creator, formatted_date, shelf):
     connection.commit()
 
 
+# kullanicinin odunc almak ya da rezerve etmek istedigi item
+# coktan onda ise true, degilse false dondurur
 def already_have(item, user):
     item_id = item.item_id
     user_id = user.user_id

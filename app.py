@@ -145,7 +145,9 @@ def personal():
                     server.ehlo()
                     server.login('aydinlikedulib@outlook.com', 'Oguzkutman09.')
                     recipients = [email]
-                    body = "\nHi,\nYou can receive the item you reserved!\n\nBest regards!"
+                    item_name = get_item_name(item_id)
+                    body = "\nHi,\nYou can receive {name} now! This is item you reserved.\n\nBest regards!".\
+                        format(name=item_name)
                     message = """From: %s\r\nTo: %s\r\nSubject: %s\r\n\
 
                     %s
